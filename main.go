@@ -3,9 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/zetafunction/simdrive/simulator"
-	"math/rand"
 	"runtime"
-	"time"
 )
 
 type Task func(chan int)
@@ -24,7 +22,6 @@ func runTrialAndReportStats(label string, task Task, iterations int) {
 }
 
 func main() {
-	rand.Seed(time.Now().UTC().UnixNano())
 	runtime.GOMAXPROCS(runtime.NumCPU())
 
 	runTrialAndReportStats(

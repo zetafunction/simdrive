@@ -3,6 +3,7 @@ package simulator
 import (
 	"math"
 	"math/rand"
+	"time"
 )
 
 // This HDD model is based on the annualized failure rates (AFR) from Google's
@@ -26,13 +27,15 @@ type hardDiskDrive struct {
 	// TODO: Convert the representation to use go's time.Duration.
 	age   int
 	state DriveState
+	prng  *rand.Rand
 }
 
 func NewHardDiskDrive() Drive {
-	hdd := new(hardDiskDrive)
-	hdd.age = 0
-	hdd.state = OK
-	return hdd
+	return &hardDiskDrive{
+		age:   0,
+		state: OK,
+		prng:  rand.New(rand.NewSource(time.Now().UnixNano())),
+	}
 }
 
 // Several helpers to help convert the data from annualized failure rates to
@@ -77,7 +80,7 @@ func hourlyFailureRateForAge(age int) float64 {
 func (hdd *hardDiskDrive) Step() {
 	hdd.age++
 	chance := hourlyFailureRateForAge(hdd.age)
-	if rand.Float64() < chance {
+	if hdd.prng.Float64() < chance {
 		hdd.state = FAILED
 	}
 }
