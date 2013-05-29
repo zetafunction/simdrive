@@ -4,83 +4,92 @@ import (
 	"fmt"
 	"github.com/zetafunction/simdrive/simulator"
 	"math/rand"
+	"runtime"
 	"time"
 )
 
-func runTrialAndReportStats(label string, runTrial func() int, numberOfTrials int) {
+type Task func(chan int)
+
+func runTrialAndReportStats(label string, task Task, iterations int) {
+	c := make(chan int)
+	for i := 0; i < iterations; i++ {
+		go task(c)
+	}
 	totalHours := 0
-	for i := 0; i < numberOfTrials; i++ {
-		totalHours += runTrial()
+	for i := 0; i < iterations; i++ {
+		totalHours += <-c
 	}
 	fmt.Printf("%s ran %d times. Average lifetime: %f\n",
-		label, numberOfTrials, float64(totalHours)/float64(numberOfTrials))
+		label, iterations, float64(totalHours)/float64(iterations))
 }
 
 func main() {
 	rand.Seed(time.Now().UTC().UnixNano())
+	runtime.GOMAXPROCS(runtime.NumCPU())
+
 	runTrialAndReportStats(
 		"Single HDD",
-		func() int {
+		func(c chan int) {
 			age := 0
 			hdd := simulator.NewHardDiskDrive()
 			for hdd.State() != simulator.FAILED {
 				age++
 				hdd.Step()
 			}
-			return age
+			c <- age
 		},
 		1000)
 	runTrialAndReportStats(
 		"Striped storage pool with 2 disks",
-		func() int {
+		func(c chan int) {
 			age := 0
 			pool := simulator.NewStripedPool(2, simulator.NewHardDiskDrive)
 			for pool.State() != simulator.FAILED {
 				age++
 				pool.Step()
 			}
-			return age
+			c <- age
 		},
 		1000)
 	runTrialAndReportStats(
 		"Mirrored storage pool with 2 disks",
-		func() int {
+		func(c chan int) {
 			age := 0
 			pool := simulator.NewMirroredPool(2, simulator.NewHardDiskDrive)
 			for pool.State() != simulator.FAILED {
 				age++
 				pool.Step()
 			}
-			return age
+			c <- age
 		},
 		1000)
 	runTrialAndReportStats(
 		"RAIDZ-1 2+1 storage pool",
-		func() int {
+		func(c chan int) {
 			age := 0
 			pool := simulator.NewParityPool(3, 1, simulator.NewHardDiskDrive)
 			for pool.State() != simulator.FAILED {
 				age++
 				pool.Step()
 			}
-			return age
+			c <- age
 		},
 		1000)
 	runTrialAndReportStats(
 		"RAIDZ-3 8+3 storage pool",
-		func() int {
+		func(c chan int) {
 			age := 0
 			pool := simulator.NewParityPool(11, 3, simulator.NewHardDiskDrive)
 			for pool.State() != simulator.FAILED {
 				age++
 				pool.Step()
 			}
-			return age
+			c <- age
 		},
 		1000)
 	runTrialAndReportStats(
 		"Mirrored storage pool with 2x RAIDZ-2 4+2 storage pools",
-		func() int {
+		func(c chan int) {
 			age := 0
 			pool := simulator.NewStripedPool(2, func() simulator.Drive {
 				return simulator.NewParityPool(4, 2, simulator.NewHardDiskDrive)
@@ -89,7 +98,7 @@ func main() {
 				age++
 				pool.Step()
 			}
-			return age
+			c <- age
 		},
 		1000)
 }
