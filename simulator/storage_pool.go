@@ -10,13 +10,15 @@ type storagePool struct {
 type DriveCreator func() Drive
 
 func newStoragePool(drives int, redundancy int, newDrive DriveCreator) Drive {
-	pool := new(storagePool)
-	pool.drives = make([]Drive, drives)
+	pool := &storagePool{
+		drives:     make([]Drive, drives),
+		state:      OK,
+		redundancy: redundancy,
+		failures:   0,
+	}
 	for i, _ := range pool.drives {
 		pool.drives[i] = newDrive()
 	}
-	pool.state = OK
-	pool.redundancy = redundancy
 	return pool
 }
 
