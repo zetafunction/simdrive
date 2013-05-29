@@ -1,7 +1,3 @@
-// TODO: Verify that math/rand's Float64() is, in fact, uniformly distributed
-// and that the use of floating point arithmetic isn't making the simulation
-// wildly inaccurate.
-
 package simulator
 
 import (
@@ -9,12 +5,12 @@ import (
 	"math/rand"
 )
 
-// This hard disk model is based on the annualized failure rates (AFR) from
-// Google's 2007 study on hard disks (see http://goo.gl/sPqui). The classical
-// formula for determining AFR from mean time between failures (MTBF) is
-// AFR = 1 - exp(-8760 / mean time before failure). The study provides AFRs for
-// several generation buckets (this is estimated from the chart in figure 2), as
-// actual numbers are not provided):
+// This HDD model is based on the annualized failure rates (AFR) from Google's
+// 2007 study on hard disks (see http://goo.gl/sPqui). The classical formula for
+// determining AFR from mean time between failures (MTBF) is:
+// AFR = 1 - exp(-8760 / mean time before failure)
+// The study provides AFRs for several generation buckets (this is estimated
+// from the chart in figure 2), as actual numbers are not provided):
 // 3 months: 0.03
 // 6 months: 0.018
 // 1 year: 0.017
@@ -25,18 +21,18 @@ import (
 // calculate the MTBF (which are a bit easier to read and represent). A modified
 // version of the AFR formula substituting 1 for 8760 is used to determine the
 // hourly failure rate for actual simulation purposes.
-type hardDisk struct {
-	// Age of the disk, in hours.
+type hardDiskDrive struct {
+	// Age of the HDD, in hours.
 	// TODO: Convert the representation to use go's time.Duration.
 	age   int
-	state DiskState
+	state DriveState
 }
 
-func NewHardDisk() Disk {
-	disk := new(hardDisk)
-	disk.age = 0
-	disk.state = OK
-	return disk
+func NewHardDiskDrive() Drive {
+	hdd := new(hardDiskDrive)
+	hdd.age = 0
+	hdd.state = OK
+	return hdd
 }
 
 // Several helpers to help convert the data from annualized failure rates to
@@ -78,14 +74,14 @@ func hourlyFailureRateForAge(age int) float64 {
 	return threeYearHourlyFailureRate
 }
 
-func (disk *hardDisk) Step() {
-	disk.age++
-	chance := hourlyFailureRateForAge(disk.age)
+func (hdd *hardDiskDrive) Step() {
+	hdd.age++
+	chance := hourlyFailureRateForAge(hdd.age)
 	if rand.Float64() < chance {
-		disk.state = FAILED
+		hdd.state = FAILED
 	}
 }
 
-func (disk *hardDisk) State() DiskState {
-	return disk.state
+func (hdd *hardDiskDrive) State() DriveState {
+	return hdd.state
 }

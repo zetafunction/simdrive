@@ -2,13 +2,12 @@ package main
 
 import (
 	"fmt"
-	"github.com/zetafunction/disksim/simulator"
+	"github.com/zetafunction/simdrive/simulator"
 	"math/rand"
 	"time"
 )
 
-func runTrialAndReportStats(
-	label string, runTrial func() int, numberOfTrials int) {
+func runTrialAndReportStats(label string, runTrial func() int, numberOfTrials int) {
 	totalHours := 0
 	for i := 0; i < numberOfTrials; i++ {
 		totalHours += runTrial()
@@ -20,37 +19,49 @@ func runTrialAndReportStats(
 func main() {
 	rand.Seed(time.Now().UTC().UnixNano())
 	runTrialAndReportStats(
-		"Single hard disk",
+		"Single HDD",
 		func() int {
 			age := 0
-			disk := simulator.NewHardDisk()
-			for disk.State() != simulator.FAILED {
+			hdd := simulator.NewHardDiskDrive()
+			for hdd.State() != simulator.FAILED {
 				age++
-				disk.Step()
+				hdd.Step()
 			}
 			return age
 		},
 		1000)
 	runTrialAndReportStats(
-		"Striped disk (2)",
+		"Striped storage pool with 2 disks",
 		func() int {
 			age := 0
-			disk := simulator.NewStripedDisk(2, simulator.NewHardDisk)
-			for disk.State() != simulator.FAILED {
+			pool := simulator.NewStripedPool(2, simulator.NewHardDiskDrive)
+			for pool.State() != simulator.FAILED {
 				age++
-				disk.Step()
+				pool.Step()
 			}
 			return age
 		},
 		1000)
 	runTrialAndReportStats(
-		"Mirrored disk (2)",
+		"Mirrored storage pool with 2 disks",
 		func() int {
 			age := 0
-			disk := simulator.NewMirroredDisk(simulator.NewHardDisk)
-			for disk.State() != simulator.FAILED {
+			pool := simulator.NewMirroredPool(2, simulator.NewHardDiskDrive)
+			for pool.State() != simulator.FAILED {
 				age++
-				disk.Step()
+				pool.Step()
+			}
+			return age
+		},
+		1000)
+	runTrialAndReportStats(
+		"RAIDZ-1 storage pool with 3 disks",
+		func() int {
+			age := 0
+			pool := simulator.NewParityPool(3, 1, simulator.NewHardDiskDrive)
+			for pool.State() != simulator.FAILED {
+				age++
+				pool.Step()
 			}
 			return age
 		},
