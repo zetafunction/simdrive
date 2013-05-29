@@ -28,13 +28,13 @@ import (
 type hardDisk struct {
 	// Age of the disk, in hours.
 	// TODO: Convert the representation to use go's time.Duration.
-	Age   int
+	age   int
 	state DiskState
 }
 
-func NewHardDisk() *hardDisk {
+func NewHardDisk() Disk {
 	disk := new(hardDisk)
-	disk.Age = 0
+	disk.age = 0
 	disk.state = OK
 	return disk
 }
@@ -57,11 +57,11 @@ func annualizedFailureRateToHourlyFailureRate(x float64) float64 {
 
 // TODO: These are really constants, so having to mark them as var is ugly.
 var (
-	threeMonthHourlyFailureRate float64 = annualizedFailureRateToHourlyFailureRate(0.03)
-	sixMonthHourlyFailureRate           = annualizedFailureRateToHourlyFailureRate(0.018)
-	oneYearHourlyFailureRate            = annualizedFailureRateToHourlyFailureRate(0.017)
-	twoYearHourlyFailureRate            = annualizedFailureRateToHourlyFailureRate(0.08)
-	threeYearHourlyFailureRate          = annualizedFailureRateToHourlyFailureRate(0.086)
+	threeMonthHourlyFailureRate = annualizedFailureRateToHourlyFailureRate(0.03)
+	sixMonthHourlyFailureRate   = annualizedFailureRateToHourlyFailureRate(0.018)
+	oneYearHourlyFailureRate    = annualizedFailureRateToHourlyFailureRate(0.017)
+	twoYearHourlyFailureRate    = annualizedFailureRateToHourlyFailureRate(0.08)
+	threeYearHourlyFailureRate  = annualizedFailureRateToHourlyFailureRate(0.086)
 )
 
 func hourlyFailureRateForAge(age int) float64 {
@@ -79,8 +79,8 @@ func hourlyFailureRateForAge(age int) float64 {
 }
 
 func (disk *hardDisk) Step() {
-	disk.Age += 1
-	chance := hourlyFailureRateForAge(disk.Age)
+	disk.age++
+	chance := hourlyFailureRateForAge(disk.age)
 	if rand.Float64() < chance {
 		disk.state = FAILED
 	}
