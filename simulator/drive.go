@@ -4,6 +4,7 @@ type DriveState int
 
 const (
 	OK DriveState = iota
+	DEGRADED
 	FAILED
 )
 

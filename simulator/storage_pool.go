@@ -36,15 +36,18 @@ func NewParityPool(drives int, redundancy int, newDrive DriveCreator) Drive {
 
 func (pool *storagePool) Step() {
 	// TODO: Throw an error if disk.state == FAILED already.
-	for i, _ := range pool.drives {
-		if pool.drives[i].State() == FAILED {
+	for _, drive := range pool.drives {
+		if drive.State() == FAILED {
 			continue
 		}
-		pool.drives[i].Step()
-		if pool.drives[i].State() == FAILED {
+		drive.Step()
+		if drive.State() == FAILED {
 			pool.failures++
 			if pool.failures > pool.redundancy {
 				pool.state = FAILED
+			} else {
+				// TODO: Attempt repair.
+				pool.state = DEGRADED
 			}
 		}
 	}
