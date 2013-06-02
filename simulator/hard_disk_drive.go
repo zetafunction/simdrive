@@ -3,7 +3,6 @@ package simulator
 import (
 	"math"
 	"math/rand"
-	"time"
 )
 
 // This HDD model is based on the annualized failure rates (AFR) from Google's
@@ -30,11 +29,11 @@ type hardDiskDrive struct {
 	prng  *rand.Rand
 }
 
-func NewHardDiskDrive() Drive {
+func NewHardDiskDrive(prng *rand.Rand) Drive {
 	return &hardDiskDrive{
 		age:   0,
 		state: OK,
-		prng:  rand.New(rand.NewSource(time.Now().UnixNano())),
+		prng:  prng,
 	}
 }
 

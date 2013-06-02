@@ -9,29 +9,29 @@ type storagePool struct {
 
 type DriveCreator func() Drive
 
-func newStoragePool(drives int, redundancy int, newDrive DriveCreator) Drive {
+func newStoragePool(drives []Drive, redundancy int) Drive {
+	// TODO: Error if redundancy is >= len(drives)
 	pool := &storagePool{
-		drives:     make([]Drive, drives),
+		drives:     drives,
 		state:      OK,
 		redundancy: redundancy,
 		failures:   0,
 	}
-	for i, _ := range pool.drives {
-		pool.drives[i] = newDrive()
-	}
 	return pool
 }
 
-func NewStripedPool(drives int, newDrive DriveCreator) Drive {
-	return newStoragePool(drives, 0, newDrive)
+func NewStripedPool(drives []Drive) Drive {
+	return newStoragePool(drives, 0)
 }
 
-func NewMirroredPool(drives int, newDrive DriveCreator) Drive {
-	return newStoragePool(drives, drives-1, newDrive)
+func NewMirroredPool(drives []Drive) Drive {
+	// TODO: Error if the drives are not all the same capacity?
+	return newStoragePool(drives, len(drives)-1)
 }
 
-func NewParityPool(drives int, redundancy int, newDrive DriveCreator) Drive {
-	return newStoragePool(drives, redundancy, newDrive)
+func NewParityPool(drives []Drive, redundancy int) Drive {
+	// TODO: Error if the drives are not all the same capacity?
+	return newStoragePool(drives, redundancy)
 }
 
 func (pool *storagePool) Step() {
