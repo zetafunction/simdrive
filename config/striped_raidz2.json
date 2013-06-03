@@ -1,0 +1,14 @@
+{
+  "root": {
+    "kind": "striped_pool",
+    "drives": ["subarray", "subarray"]
+  },
+  "subarray": {
+    "kind": "parity_pool",
+    "redundancy": 2,
+    "drives": ["hda", "hda", "hda", "hda", "hda", "hda"]
+  },
+  "hda": {
+    "kind": "hard_disk"
+  }
+}

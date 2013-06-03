@@ -1,0 +1,10 @@
+{
+  "root": {
+    "kind": "parity_pool",
+    "redundancy": 3,
+    "drives": ["hda", "hda", "hda", "hda", "hda", "hda", "hda", "hda", "hda", "hda", "hda"]
+  },
+  "hda": {
+    "kind": "hard_disk"
+  }
+}
