@@ -95,7 +95,7 @@ func generateDrive(nodes driveGraph, node *driveNode, seen driveNodeSet, prng *r
 			return nil, err
 		}
 		throughput, err := parseScaledUint(node.Throughput, "bps")
-		drive = NewHardDiskDrive(size, throughput, prng)
+		drive = NewHardDisk(size, throughput, prng)
 	case "mirrored_pool":
 		drive = NewMirroredPool(drives)
 	case "parity_pool":

@@ -5,9 +5,9 @@ import (
 	"math/rand"
 )
 
-// This HDD model is based on the annualized failure rates (AFR) from Google's
-// 2007 study on hard disks (see http://goo.gl/sPqui). The classical formula for
-// determining AFR from mean time between failures (MTBF) is:
+// The hard disk model is based on the annualized failure rates (AFR) from
+// Google's 2007 study on hard disks (see http://goo.gl/sPqui). The classical
+// formula for determining AFR from mean time between failures (MTBF) is:
 // AFR = 1 - exp(-8760 / mean time before failure)
 // The study provides AFRs for several generation buckets (this is estimated
 // from the chart in figure 2), as actual numbers are not provided):
@@ -21,20 +21,20 @@ import (
 // calculate the MTBF (which are a bit easier to read and represent). A modified
 // version of the AFR formula substituting 1 for 8760 is used to determine the
 // hourly failure rate for actual simulation purposes.
-type hardDiskDrive struct {
+type hardDisk struct {
 	size       uint64
 	throughput uint64
-	// Age of the HDD in hours.
+	// Age of the hard disk in hours.
 	// TODO: Convert the representation to use go's time.Duration.
 	age    int
 	status DriveStatus
 	prng   *rand.Rand
 }
 
-// NewHardDiskDrive returns a new Drive representing a tradtional disk drive
-// using spinning magnetic media that can store size bytes.
-func NewHardDiskDrive(size uint64, throughput uint64, prng *rand.Rand) Drive {
-	return &hardDiskDrive{
+// NewHardDisk returns a new Drive representing a tradtional disk drive using
+// spinning magnetic media that can store size bytes.
+func NewHardDisk(size uint64, throughput uint64, prng *rand.Rand) Drive {
+	return &hardDisk{
 		size:       size,
 		throughput: throughput,
 		age:        0,
@@ -82,22 +82,22 @@ func hourlyFailureRateForAge(age int) float64 {
 	return threeYearHourlyFailureRate
 }
 
-func (hdd *hardDiskDrive) Step() {
-	hdd.age++
-	chance := hourlyFailureRateForAge(hdd.age)
-	if hdd.prng.Float64() < chance {
-		hdd.status = FAILED
+func (hd *hardDisk) Step() {
+	hd.age++
+	chance := hourlyFailureRateForAge(hd.age)
+	if hd.prng.Float64() < chance {
+		hd.status = FAILED
 	}
 }
 
-func (hdd *hardDiskDrive) Status() DriveStatus {
-	return hdd.status
+func (hd *hardDisk) Status() DriveStatus {
+	return hd.status
 }
 
-func (hdd *hardDiskDrive) Size() uint64 {
-	return hdd.size
+func (hd *hardDisk) Size() uint64 {
+	return hd.size
 }
 
-func (hdd *hardDiskDrive) Throughput() uint64 {
-	return hdd.throughput
+func (hd *hardDisk) Throughput() uint64 {
+	return hd.throughput
 }
