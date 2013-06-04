@@ -50,7 +50,7 @@ func main() {
 				log.Fatal(err)
 			}
 			age := 0
-			for drive.State() != simulator.FAILED {
+			for drive.Status() != simulator.FAILED {
 				age++
 				drive.Step()
 			}
@@ -64,9 +64,7 @@ func main() {
 }
 
 // TODO: This code should belong in a separate package.
-type Task func(chan<- int)
-
-func runAndReportResults(task Task, iterations int) {
+func runAndReportResults(task func(chan<- int), iterations int) {
 	c := make(chan int)
 	for i := 0; i < iterations; i++ {
 		go task(c)

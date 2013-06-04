@@ -7,9 +7,15 @@ import (
 )
 
 var (
-	NoRootDriveError        = fmt.Errorf("No root drive found")
+	// NoRootDriveError means that a candidate drive to use as the root of
+	// the drive hierarchy was not found in the JSON config.
+	NoRootDriveError = fmt.Errorf("No root drive found")
+	// MultipleRootDrivesError means that multiple candidate drives for the
+	// root of the drive hierarchy were found in the JSON config.
 	MultipleRootDrivesError = fmt.Errorf("Multiple root drives found")
-	CycleDetectedError      = fmt.Errorf("Detected cycle in config")
+	// CycleDetectedError means that a cycle was found in the dependency
+	// tree when creating the drive hierarchy.
+	CycleDetectedError = fmt.Errorf("Detected cycle in config")
 )
 
 type driveNode struct {
@@ -22,9 +28,8 @@ type driveNode struct {
 type driveGraph map[string]*driveNode
 type driveNodeSet map[*driveNode]bool
 
-// Parses JSON configs into an actual Drive configuration.
-// TODO: Document this better.
-func ParseConfig(config []byte, prng *rand.Rand) (Drive, error) {
+// ParseConfig parses the JSON string in config into a Drive object.
+func ParseConfig(config []byte, prng *rand.Rand) (drive Drive, err error) {
 	var nodes driveGraph
 	if err := json.Unmarshal(config, &nodes); err != nil {
 		return nil, err

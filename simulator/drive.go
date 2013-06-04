@@ -1,13 +1,19 @@
 package simulator
 
-type DriveState int
+// DriveStatus represents the status of a drive.
+type DriveStatus int
 
 const (
-	OK DriveState = iota
+	// OK means that the drive is healthy.
+	OK DriveStatus = iota
+	// DEGRADED means that the drive has experienced failures in a manner
+	// that are recoverable.
 	DEGRADED
+	// FAILED means that the drive has lost data.
 	FAILED
 )
 
+// A Drive represents a simulation of an abstract storage mechanism for data.
 type Drive interface {
 	// Steps the simulation forward by an hour. A basic drive implementation
 	// that represents a traditional spinning, magnetic HDD might step its
@@ -16,6 +22,6 @@ type Drive interface {
 	// storage volume would invoke Step() on each disk it owns.
 	Step()
 
-	// Returns the current drive state.
-	State() DriveState
+	// Returns the current drive status.
+	Status() DriveStatus
 }

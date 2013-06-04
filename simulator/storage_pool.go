@@ -2,57 +2,61 @@ package simulator
 
 type storagePool struct {
 	drives     []Drive
-	state      DriveState
+	status     DriveStatus
 	redundancy int
 	failures   int
 }
 
-type DriveCreator func() Drive
-
 func newStoragePool(drives []Drive, redundancy int) Drive {
 	// TODO: Error if redundancy is >= len(drives)
-	pool := &storagePool{
+	return &storagePool{
 		drives:     drives,
-		state:      OK,
+		status:     OK,
 		redundancy: redundancy,
 		failures:   0,
 	}
-	return pool
 }
 
+// NewStripedPool returns a new Drive that stripes data across the provided
+// drives.
 func NewStripedPool(drives []Drive) Drive {
 	return newStoragePool(drives, 0)
 }
 
+// NewMirroredPool returns a new Drive that mirrors data across the provided
+// drives.
 func NewMirroredPool(drives []Drive) Drive {
 	// TODO: Error if the drives are not all the same capacity?
 	return newStoragePool(drives, len(drives)-1)
 }
 
+// NewParityPool returns a new Drive that stripes data across the provided
+// drives, using len(drives)-redundancy of the drives for data and the remainder
+// for parity.
 func NewParityPool(drives []Drive, redundancy int) Drive {
 	// TODO: Error if the drives are not all the same capacity?
 	return newStoragePool(drives, redundancy)
 }
 
 func (pool *storagePool) Step() {
-	// TODO: Throw an error if disk.state == FAILED already.
+	// TODO: Throw an error if disk.status == FAILED already.
 	for _, drive := range pool.drives {
-		if drive.State() == FAILED {
+		if drive.Status() == FAILED {
 			continue
 		}
 		drive.Step()
-		if drive.State() == FAILED {
+		if drive.Status() == FAILED {
 			pool.failures++
 			if pool.failures > pool.redundancy {
-				pool.state = FAILED
+				pool.status = FAILED
 			} else {
 				// TODO: Attempt repair.
-				pool.state = DEGRADED
+				pool.status = DEGRADED
 			}
 		}
 	}
 }
 
-func (pool *storagePool) State() DriveState {
-	return pool.state
+func (pool *storagePool) Status() DriveStatus {
+	return pool.status
 }

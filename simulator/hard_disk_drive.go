@@ -24,16 +24,18 @@ import (
 type hardDiskDrive struct {
 	// Age of the HDD, in hours.
 	// TODO: Convert the representation to use go's time.Duration.
-	age   int
-	state DriveState
-	prng  *rand.Rand
+	age    int
+	status DriveStatus
+	prng   *rand.Rand
 }
 
+// NewHardDiskDrive returns a new Drive representing a tradtional disk drive
+// using spinning magnetic media.
 func NewHardDiskDrive(prng *rand.Rand) Drive {
 	return &hardDiskDrive{
-		age:   0,
-		state: OK,
-		prng:  prng,
+		age:    0,
+		status: OK,
+		prng:   prng,
 	}
 }
 
@@ -80,10 +82,10 @@ func (hdd *hardDiskDrive) Step() {
 	hdd.age++
 	chance := hourlyFailureRateForAge(hdd.age)
 	if hdd.prng.Float64() < chance {
-		hdd.state = FAILED
+		hdd.status = FAILED
 	}
 }
 
-func (hdd *hardDiskDrive) State() DriveState {
-	return hdd.state
+func (hdd *hardDiskDrive) Status() DriveStatus {
+	return hdd.status
 }
