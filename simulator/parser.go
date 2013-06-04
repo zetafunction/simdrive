@@ -4,6 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/rand"
+	"strconv"
+	"strings"
+	"unicode"
 )
 
 var (
@@ -21,6 +24,8 @@ var (
 type driveNode struct {
 	Kind   string
 	Drives []string
+	// Hard disk-specific parameters.
+	Size string
 	// Parity pool-specific parameters.
 	Redundancy int
 }
@@ -84,7 +89,11 @@ func generateDrive(nodes driveGraph, node *driveNode, seen driveNodeSet, prng *r
 	}
 	switch node.Kind {
 	case "hard_disk":
-		drive = NewHardDiskDrive(prng)
+		size, err := parseScaledUint(node.Size, "B")
+		if err != nil {
+			return nil, err
+		}
+		drive = NewHardDiskDrive(size, prng)
 	case "mirrored_pool":
 		drive = NewMirroredPool(drives)
 	case "parity_pool":
@@ -96,4 +105,43 @@ func generateDrive(nodes driveGraph, node *driveNode, seen driveNodeSet, prng *r
 		err = fmt.Errorf("Invalid kind: %s", node.Kind)
 	}
 	return drive, err
+}
+
+var siPrefixToScale = map[string]uint64{
+	"":   1,
+	"K":  1000,
+	"M":  1000000,
+	"G":  1000000000,
+	"T":  1000000000000,
+	"P":  1000000000000000,
+	"E":  1000000000000000000,
+	"Ki": 1 << 10,
+	"Mi": 1 << 20,
+	"Gi": 1 << 30,
+	"Ti": 1 << 40,
+	"Pi": 1 << 50,
+	"Ei": 1 << 60,
+}
+
+// parseScaledUint parses strings that contain a number, an optional SI binary
+// or metric prefix, and a unit specifier. If an SI prefix is found, the
+// returned value n is scaled by the corresponding amount.
+func parseScaledUint(input string, unit string) (n uint64, err error) {
+	unitIndex := strings.Index(input, unit)
+	if unitIndex < 0 || input[unitIndex:] != unit {
+		return 0, fmt.Errorf("%s doesn't end with unit %s", input, unit)
+	}
+
+	afterDigitsIndex := strings.LastIndexFunc(input, unicode.IsDigit) + 1
+	n, err = strconv.ParseUint(input[:afterDigitsIndex], 10, 64)
+	if err != nil {
+		return
+	}
+
+	if scale, present := siPrefixToScale[input[afterDigitsIndex:unitIndex]]; present {
+		n *= scale
+	} else {
+		err = fmt.Errorf("invalid SI prefix in %s", input)
+	}
+	return
 }

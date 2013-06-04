@@ -1,5 +1,9 @@
 package simulator
 
+import (
+	"math"
+)
+
 type storagePool struct {
 	drives     []Drive
 	status     DriveStatus
@@ -17,21 +21,21 @@ func newStoragePool(drives []Drive, redundancy int) Drive {
 	}
 }
 
-// NewStripedPool returns a new Drive that stripes data across the provided
+// NewStripedPool returns a new Drive that stripes data across its member
 // drives.
 func NewStripedPool(drives []Drive) Drive {
 	return newStoragePool(drives, 0)
 }
 
-// NewMirroredPool returns a new Drive that mirrors data across the provided
+// NewMirroredPool returns a new Drive that mirrors data across its member
 // drives.
 func NewMirroredPool(drives []Drive) Drive {
 	// TODO: Error if the drives are not all the same capacity?
 	return newStoragePool(drives, len(drives)-1)
 }
 
-// NewParityPool returns a new Drive that stripes data across the provided
-// drives, using len(drives)-redundancy of the drives for data and the remainder
+// NewParityPool returns a new Drive that stripes data across its member drives
+// using len(drives)-redundancy of the drives for data and the remainder
 // for parity.
 func NewParityPool(drives []Drive, redundancy int) Drive {
 	// TODO: Error if the drives are not all the same capacity?
@@ -59,4 +63,26 @@ func (pool *storagePool) Step() {
 
 func (pool *storagePool) Status() DriveStatus {
 	return pool.status
+}
+
+func (pool *storagePool) Size() (size uint64) {
+	// TODO: Consider calculating this once at drive creation instead.
+	if pool.redundancy == 0 {
+		// A striped pool's size is simply the sum of all its member
+		// drives.
+		for _, drive := range pool.drives {
+			size += drive.Size()
+		}
+	} else {
+		// The actual size of a mirrored/parity pool is determined by
+		// the size of its smallest member drive.
+                var minMemberDriveSize uint64 = math.MaxUint64
+		for _, drive := range pool.drives {
+			if drive.Size() < minMemberDriveSize {
+				minMemberDriveSize = drive.Size()
+			}
+		}
+		size = minMemberDriveSize * uint64(len(pool.drives)-pool.redundancy)
+	}
+	return
 }

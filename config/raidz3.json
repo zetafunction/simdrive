@@ -5,6 +5,7 @@
     "drives": ["hda", "hda", "hda", "hda", "hda", "hda", "hda", "hda", "hda", "hda", "hda"]
   },
   "hda": {
-    "kind": "hard_disk"
+    "kind": "hard_disk",
+    "size": "2TB"
   }
 }

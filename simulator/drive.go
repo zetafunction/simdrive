@@ -24,4 +24,7 @@ type Drive interface {
 
 	// Returns the current drive status.
 	Status() DriveStatus
+
+	// Returns the size of the drive in bytes.
+	Size() uint64
 }
