@@ -1,1 +1,7 @@
-{"hda": {"kind": "hard_disk", "size": "1TB"}}
+{
+  "hda": {
+    "kind": "hard_disk",
+    "size": "1TB",
+    "throughput": "800Mbps"
+  }
+}

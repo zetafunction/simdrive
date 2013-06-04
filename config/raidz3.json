@@ -6,6 +6,7 @@
   },
   "hda": {
     "kind": "hard_disk",
-    "size": "2TB"
+    "size": "2TB",
+    "throughput": "800Mbps"
   }
 }
