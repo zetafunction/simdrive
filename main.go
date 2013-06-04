@@ -70,32 +70,32 @@ func runAndReportResults(task func(chan<- int), iterations int) {
 		go task(c)
 	}
 	results := make([]int, iterations)
-	for i := 0; i < iterations; i++ {
+	for i := 0; i < len(results); i++ {
 		results[i] = <-c
 	}
 	sort.Ints(results)
-	log.Printf("Results of %d iterations:", iterations)
+	log.Printf("Results of %d iterations:", len(results))
 
 	total := 0
 	for _, result := range results {
 		total += result
 	}
-	mean := float64(total) / float64(iterations)
+	mean := float64(total) / float64(len(results))
 	log.Printf("  mean: %f", mean)
 
 	sumOfResidualsSquared := 0.
 	for _, result := range results {
 		sumOfResidualsSquared += math.Pow(float64(result)-mean, 2)
 	}
-	variance := sumOfResidualsSquared / float64(iterations)
+	variance := sumOfResidualsSquared / float64(len(results))
 	log.Printf("  stddev: %f", math.Sqrt(variance))
 
 	count := 0
 	for i := 1; i <= 10; i++ {
-		for results[count] < i*8760 {
+		for count < len(results) && results[count] < i*8760 {
 			count++
 		}
 		log.Printf("  %d year survival rate: %f",
-			i, float64(iterations-count)/float64(iterations))
+			i, float64(len(results)-count)/float64(len(results)))
 	}
 }
