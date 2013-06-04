@@ -29,7 +29,7 @@ type driveGraph map[string]*driveNode
 type driveNodeSet map[*driveNode]bool
 
 // ParseConfig parses the JSON string in config into a Drive object.
-func ParseConfig(config []byte, prng *rand.Rand) (drive Drive, err error) {
+func ParseConfig(config []byte, prng *rand.Rand) (Drive, error) {
 	var nodes driveGraph
 	if err := json.Unmarshal(config, &nodes); err != nil {
 		return nil, err
@@ -67,7 +67,7 @@ func findRoot(nodes driveGraph) (*driveNode, error) {
 	return candidates[0], nil
 }
 
-func generateDrive(nodes driveGraph, node *driveNode, seen driveNodeSet, prng *rand.Rand) (Drive, error) {
+func generateDrive(nodes driveGraph, node *driveNode, seen driveNodeSet, prng *rand.Rand) (drive Drive, err error) {
 	if _, present := seen[node]; present {
 		return nil, CycleDetectedError
 	}
@@ -76,22 +76,24 @@ func generateDrive(nodes driveGraph, node *driveNode, seen driveNodeSet, prng *r
 
 	drives := []Drive{}
 	for _, driveName := range node.Drives {
-		drive, err := generateDrive(nodes, nodes[driveName], seen, prng)
+		d, err := generateDrive(nodes, nodes[driveName], seen, prng)
 		if err != nil {
 			return nil, err
 		}
-		drives = append(drives, drive)
+		drives = append(drives, d)
 	}
 	switch node.Kind {
 	case "hard_disk":
-		return NewHardDiskDrive(prng), nil
+		drive = NewHardDiskDrive(prng)
 	case "mirrored_pool":
-		return NewMirroredPool(drives), nil
+		drive = NewMirroredPool(drives)
 	case "parity_pool":
 		// TODO: Return an error if redundancy is not set.
-		return NewParityPool(drives, node.Redundancy), nil
+		drive = NewParityPool(drives, node.Redundancy)
 	case "striped_pool":
-		return NewStripedPool(drives), nil
+		drive = NewStripedPool(drives)
+	default:
+		err = fmt.Errorf("Invalid kind: %s", node.Kind)
 	}
-	return nil, fmt.Errorf("Invalid kind: %s", node.Kind)
+	return drive, err
 }
