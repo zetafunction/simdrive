@@ -22,8 +22,8 @@ import (
 // version of the AFR formula substituting 1 for 8760 is used to determine the
 // hourly failure rate for actual simulation purposes.
 type hardDiskDrive struct {
-	// Size of the HDD in bytes.
-	size uint64
+	size       uint64
+	throughput uint64
 	// Age of the HDD in hours.
 	// TODO: Convert the representation to use go's time.Duration.
 	age    int
@@ -33,12 +33,13 @@ type hardDiskDrive struct {
 
 // NewHardDiskDrive returns a new Drive representing a tradtional disk drive
 // using spinning magnetic media that can store size bytes.
-func NewHardDiskDrive(size uint64, prng *rand.Rand) Drive {
+func NewHardDiskDrive(size uint64, throughput uint64, prng *rand.Rand) Drive {
 	return &hardDiskDrive{
-		size:   size,
-		age:    0,
-		status: OK,
-		prng:   prng,
+		size:       size,
+		throughput: throughput,
+		age:        0,
+		status:     OK,
+		prng:       prng,
 	}
 }
 
@@ -95,4 +96,8 @@ func (hdd *hardDiskDrive) Status() DriveStatus {
 
 func (hdd *hardDiskDrive) Size() uint64 {
 	return hdd.size
+}
+
+func (hdd *hardDiskDrive) Throughput() uint64 {
+	return hdd.throughput
 }

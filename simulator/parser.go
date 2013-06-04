@@ -25,7 +25,8 @@ type driveNode struct {
 	Kind   string
 	Drives []string
 	// Hard disk-specific parameters.
-	Size string
+	Size       string
+	Throughput string
 	// Parity pool-specific parameters.
 	Redundancy int
 }
@@ -93,7 +94,8 @@ func generateDrive(nodes driveGraph, node *driveNode, seen driveNodeSet, prng *r
 		if err != nil {
 			return nil, err
 		}
-		drive = NewHardDiskDrive(size, prng)
+		throughput, err := parseScaledUint(node.Throughput, "bps")
+		drive = NewHardDiskDrive(size, throughput, prng)
 	case "mirrored_pool":
 		drive = NewMirroredPool(drives)
 	case "parity_pool":

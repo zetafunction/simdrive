@@ -73,7 +73,7 @@ func runAndReportResults(task func(chan<- int), iterations int) {
 	for i := 0; i < iterations; i++ {
 		results[i] = <-c
 	}
-	sort.IntSlice(results).Sort()
+	sort.Ints(results)
 	log.Printf("Results of %d iterations:", iterations)
 
 	total := 0

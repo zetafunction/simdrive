@@ -65,24 +65,42 @@ func (pool *storagePool) Status() DriveStatus {
 	return pool.status
 }
 
-func (pool *storagePool) Size() (size uint64) {
+func (pool *storagePool) Size() (n uint64) {
 	// TODO: Consider calculating this once at drive creation instead.
 	if pool.redundancy == 0 {
 		// A striped pool's size is simply the sum of all its member
 		// drives.
 		for _, drive := range pool.drives {
-			size += drive.Size()
+			n += drive.Size()
 		}
 	} else {
 		// The actual size of a mirrored/parity pool is determined by
 		// the size of its smallest member drive.
-                var minMemberDriveSize uint64 = math.MaxUint64
+		var minMemberDriveSize uint64 = math.MaxUint64
 		for _, drive := range pool.drives {
 			if drive.Size() < minMemberDriveSize {
 				minMemberDriveSize = drive.Size()
 			}
 		}
-		size = minMemberDriveSize * uint64(len(pool.drives)-pool.redundancy)
+		n = minMemberDriveSize * uint64(len(pool.drives)-pool.redundancy)
 	}
 	return
+}
+
+func (pool *storagePool) Throughput() uint64 {
+	// TODO: To be more realistic, this should take into account:
+	// - Throughput might not scale 100% linearly, especially if parity
+	//   drives are being used.
+	// - In the real world, physical interface limits might cap the actual
+	//   throughput for a storage pool with lots of drives.
+	var minThroughput uint64 = math.MaxUint64
+	for _, drive := range pool.drives {
+		if drive.Status() == FAILED {
+			continue
+		}
+		if drive.Throughput() < minThroughput {
+			minThroughput = drive.Throughput()
+		}
+	}
+	return minThroughput * uint64(len(pool.drives)-pool.redundancy)
 }

@@ -27,4 +27,7 @@ type Drive interface {
 
 	// Returns the size of the drive in bytes.
 	Size() uint64
+
+	// Returns the average throughput of the drive in bits per second.
+	Throughput() uint64
 }

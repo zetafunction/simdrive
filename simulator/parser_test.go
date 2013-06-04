@@ -33,27 +33,27 @@ var parseConfigTests = []struct {
 	fmt.Errorf("Invalid kind: invalid"),
 }, {
 	`{"root": {"kind": "mirrored_pool", "drives": ["sda", "sda"]},
-        "sda": {"kind": "hard_disk", "size": "1KB"}}`,
+        "sda": {"kind": "hard_disk", "size": "1KB", "throughput": "200bps"}}`,
 	NewMirroredPool([]Drive{
-		NewHardDiskDrive(1000, testPrng),
-		NewHardDiskDrive(1000, testPrng),
+		NewHardDiskDrive(1000, 200, testPrng),
+		NewHardDiskDrive(1000, 200, testPrng),
 	}),
 	nil,
 }, {
 	`{"root": {"kind": "parity_pool", "drives": ["sda", "sda", "sda"], "redundancy": 1},
-        "sda": {"kind": "hard_disk", "size": "1KB"}}`,
+        "sda": {"kind": "hard_disk", "size": "1KB", "throughput": "200bps"}}`,
 	NewParityPool([]Drive{
-		NewHardDiskDrive(1000, testPrng),
-		NewHardDiskDrive(1000, testPrng),
-		NewHardDiskDrive(1000, testPrng),
+		NewHardDiskDrive(1000, 200, testPrng),
+		NewHardDiskDrive(1000, 200, testPrng),
+		NewHardDiskDrive(1000, 200, testPrng),
 	}, 1),
 	nil,
 }, {
 	`{"root": {"kind": "striped_pool", "drives": ["sda", "sda"]},
-        "sda": {"kind": "hard_disk", "size": "1KB"}}`,
+        "sda": {"kind": "hard_disk", "size": "1KB", "throughput": "200bps"}}`,
 	NewStripedPool([]Drive{
-		NewHardDiskDrive(1000, testPrng),
-		NewHardDiskDrive(1000, testPrng),
+		NewHardDiskDrive(1000, 200, testPrng),
+		NewHardDiskDrive(1000, 200, testPrng),
 	}),
 	nil,
 }}
