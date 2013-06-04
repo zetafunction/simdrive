@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"github.com/zetafunction/simdrive/simulator"
 	"io/ioutil"
 	"log"
@@ -11,6 +12,56 @@ import (
 	"sort"
 	"time"
 )
+
+var iterations = flag.Int("n", 1000, "number of iterations")
+
+func main() {
+	runtime.GOMAXPROCS(runtime.NumCPU())
+
+	flag.Parse()
+
+	args := flag.Args()
+	if len(args) == 0 {
+		log.Fatal("no input files")
+	}
+	for _, file := range args {
+		log.Printf("Processing %s", file)
+
+		f, err := os.Open(file)
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer f.Close()
+
+		bytes, err := ioutil.ReadAll(f)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		start := time.Now()
+
+		runAndReportResults(func(c chan<- int) {
+			rng := rand.New(rand.NewSource(time.Now().UnixNano()))
+			// TODO: Ideally,  there should be a way to clone a
+			// Drive hierarchy rather than reparsing the input in
+			// each goroutine.
+			drive, err := simulator.ParseConfig(bytes, rng)
+			if err != nil {
+				log.Fatal(err)
+			}
+			age := 0
+			for drive.State() != simulator.FAILED {
+				age++
+				drive.Step()
+			}
+			c <- age
+		}, *iterations)
+
+		end := time.Now()
+		elapsed := end.Sub(start)
+		log.Printf("%s elapsed", elapsed)
+	}
+}
 
 // TODO: This code should belong in a separate package.
 type Task func(chan<- int)
@@ -34,11 +85,11 @@ func runAndReportResults(task Task, iterations int) {
 	mean := float64(total) / float64(iterations)
 	log.Printf("  mean: %f", mean)
 
-	squared_difference_sum := 0.
+	sumOfResidualsSquared := 0.
 	for _, result := range results {
-		squared_difference_sum += math.Pow(float64(result)-mean, 2)
+		sumOfResidualsSquared += math.Pow(float64(result)-mean, 2)
 	}
-	variance := squared_difference_sum / float64(iterations)
+	variance := sumOfResidualsSquared / float64(iterations)
 	log.Printf("  stddev: %f", math.Sqrt(variance))
 
 	count := 0
@@ -49,36 +100,4 @@ func runAndReportResults(task Task, iterations int) {
 		log.Printf("  %d year survival rate: %f",
 			i, float64(iterations-count)/float64(iterations))
 	}
-}
-
-func main() {
-	runtime.GOMAXPROCS(runtime.NumCPU())
-
-	bytes, err := ioutil.ReadAll(os.Stdin)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	start := time.Now()
-
-	// TODO: Configure the number of iterations with a command-line flag.
-	runAndReportResults(func(c chan<- int) {
-		rng := rand.New(rand.NewSource(time.Now().UnixNano()))
-		// TODO: Ideally,  there should be a way to clone a Drive
-		// hierarchy rather than reparsing the input in each goroutine.
-		drive, err := simulator.ParseConfig(bytes, rng)
-		if err != nil {
-			log.Fatal(err)
-		}
-		age := 0
-		for drive.State() != simulator.FAILED {
-			age++
-			drive.Step()
-		}
-		c <- age
-	}, 1000)
-
-	end := time.Now()
-	elapsed := end.Sub(start)
-	log.Printf("%s elapsed", elapsed)
 }
